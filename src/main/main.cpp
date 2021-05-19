@@ -39,33 +39,44 @@ void generateFrame(cv::Mat& dst,
         cv::imwrite(filename, dst);
 }
 
+void calculateHeatmap(const cv::Mat& src, cv::Mat& dst,
+    const cv::Size& gauss_size, double gauss_sigma,
+    size_t median_size1, size_t median_size2,
+    const std::string& filename = "null") {
+
+    //denoising
+    cv::Mat denoised = cv::Mat(src.rows, src.cols, CV_8UC1);
+    cv::GaussianBlur(src, denoised, gauss_size, gauss_sigma);
+
+    //gitting background color
+    cv::Mat background = cv::Mat(src.rows, src.cols, CV_8UC1);
+    cv::medianBlur(denoised, background, median_size1);
+    cv::medianBlur(background, background, median_size2);
+
+    //getting heatmap
+    double min, max;
+    dst = background - denoised;
+    cv::minMaxIdx(dst, &min, &max);
+    dst.convertTo(dst, CV_32FC1);
+    dst /= max;
+    std::cout << min << " " << max << std::endl;
+
+    if (filename != "null")
+        cv::imwrite(filename, dst, { cv::IMWRITE_EXR_TYPE_FLOAT });
+
+}
+
 int main() {
     std::srand((unsigned)std::time(0));
 
     //frame generation
     //cv::Mat frame = cv::imread("../../../data/frame.png", cv::IMREAD_GRAYSCALE);
-    cv::Mat mat = cv::Mat::zeros(64, 64, CV_8UC1);
-    generateFrame(mat, 180, 3, 20, "../../../data/src1.png");
+    cv::Mat frame = cv::Mat::zeros(64, 64, CV_8UC1);
+    generateFrame(frame, 180, 3, 20, "../../../data/src1.png");
 
     //heatmap calculation
-    //denoising
-    cv::Mat denoised = cv::Mat(mat.rows, mat.cols, CV_8UC1);
-    cv::GaussianBlur(mat, denoised, {11, 11}, 20);
-
-    //gitting background color
-    cv::Mat background = cv::Mat(mat.rows, mat.cols, CV_8UC1);
-    cv::medianBlur(denoised, background, 41);
-    cv::medianBlur(background, background, 41);
-
-    //getting heatmap
-    double min, max;
-    cv::Mat heatmap = background - denoised;
-    cv::minMaxIdx(heatmap, &min, &max);
-    heatmap.convertTo(heatmap, CV_32FC1);
-    heatmap /= max;
-    cv::imwrite("../../../data/dst1.png", heatmap, { cv::IMWRITE_EXR_TYPE_FLOAT });
-
-    std::cout << min << " " << max << std::endl;
+    cv::Mat heatmap = cv::Mat::zeros(frame.rows, frame.cols, CV_32FC1);
+    calculateHeatmap(frame, heatmap, {11, 11}, 80, 41, 41, "../../../data/dst1.png");
 
     cv::waitKey(0);
 }
