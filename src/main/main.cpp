@@ -69,14 +69,16 @@ void calculateHeatmap(const cv::Mat& src, cv::Mat& dst,
 int main() {
     std::srand((unsigned)std::time(0));
 
-    //frame generation
     //cv::Mat frame = cv::imread("../../../data/frame.png", cv::IMREAD_GRAYSCALE);
     cv::Mat frame = cv::Mat::zeros(64, 64, CV_8UC1);
-    generateFrame(frame, 180, 3, 20, "../../../data/src1.png");
-
-    //heatmap calculation
     cv::Mat heatmap = cv::Mat::zeros(frame.rows, frame.cols, CV_32FC1);
-    calculateHeatmap(frame, heatmap, {11, 11}, 80, 41, 41, "../../../data/dst1.png");
+
+    for (size_t i{ 1 }; i < 6; ++i) {
+        //frame generation
+        generateFrame(frame, 180, 3, 20, "../../../data/src" + std::to_string(i) + ".png");
+        //heatmap calculation
+        calculateHeatmap(frame, heatmap, { 11, 11 }, 80, 41, 41, "../../../data/dst" + std::to_string(i) + ".png");
+    }
 
     cv::waitKey(0);
 }
