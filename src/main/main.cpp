@@ -17,7 +17,8 @@ cv::Mat generateDaphnia(cv::Mat& dst, const cv::Scalar& color) {
 
     daphnia_mask += 255;
     cv::ellipse(daphnia_mask, { x_coord, y_coord }, { width, height }, angle, 0, 360, color, -1);
-    cv::GaussianBlur(daphnia_mask, dst, {5, 5}, 10);
+    cv::ellipse(dst, { x_coord, y_coord }, { width, height }, angle, 0, 360, color, -1);
+    cv::GaussianBlur(dst, dst, { 7, 7 }, 100);
     cv::threshold(daphnia_mask, daphnia_mask, 150, 255, cv::THRESH_BINARY_INV);
     daphnia_mask /= 255;
 
@@ -36,7 +37,8 @@ void generateFrame(cv::Mat& dst,
     size_t quantity = std::rand() % 3 + 1;
     cv::Mat daphnia_mask = cv::Mat::zeros(dst.size(), CV_32FC1);
     cv::Mat daphnia_inv_mask = cv::Mat::zeros(dst.size(), CV_32FC1);
-    cv::Mat daphina_object = cv::Mat::zeros(dst.size(), CV_32FC1);
+    cv::Mat daphina_object = dst.clone();
+    daphina_object.convertTo(daphina_object, CV_32FC1);
     for (size_t i{}; i < quantity; ++i) {
         daphnia_mask = generateDaphnia(daphina_object, daphnia_color);
         cv::threshold(daphnia_mask, daphnia_inv_mask, 0.5, 1, cv::THRESH_BINARY_INV);
